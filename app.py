@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 STATIC_DIR = ROOT / "static"
 # Project scan root: configurable via env PROJECTS_ROOT, default to current user's home.
-# Contoh: PROJECTS_ROOT=/home/uniserver python3 app.py
+# Contoh: PROJECTS_ROOT=$HOME python3 app.py
 HOME_DIR = Path(os.environ.get("PROJECTS_ROOT") or Path.home())
 
 # Global state for delta calculations
@@ -694,8 +694,12 @@ def get_projects():
         if cache is not None:
             return cache
         # Quick lightweight placeholder without size calc (fast)
-        return [{"name": p.name, "path": str(p), "types": detect_project_type(p), "size_human": "...", "git_branch":"", "git_status":"loading...", "services":[], "service_active":{}, "last_modified":"", "running": False}
-                for p in sorted([x for x in HOME_DIR.iterdir() if x.is_dir() and not x.name.startswith(".") and x.name not in {"snap","tmp"}], key=lambda x: x.name.lower())]
+        # HOME_DIR may not exist (e.g. docker -e PROJECTS_ROOT without mount)
+        try:
+            return [{"name": p.name, "path": str(p), "types": detect_project_type(p), "size_human": "...", "git_branch":"", "git_status":"loading...", "services":[], "service_active":{}, "last_modified":"", "running": False}
+                    for p in sorted([x for x in HOME_DIR.iterdir() if x.is_dir() and not x.name.startswith(".") and x.name not in {"snap","tmp"}], key=lambda x: x.name.lower())]
+        except Exception:
+            return []
     return cache
 
 # Docker cache

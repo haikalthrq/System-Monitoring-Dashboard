@@ -1,3 +1,7 @@
+# System Monitor - Realtime Dashboard (TEMPLATE)
+# Jangan copy manual — jalankan ./install-service.sh agar
+# User= dan WorkingDirectory= terisi otomatis sesuai user & path saat ini.
+# Lihat README bagian "systemd".
 [Unit]
 Description=System Monitor - Realtime Dashboard
 After=network.target docker.service
@@ -5,9 +9,9 @@ Wants=docker.service
 
 [Service]
 Type=simple
-User=uniserver
-WorkingDirectory=/home/uniserver/system-monitor
-ExecStart=/usr/bin/python3 /home/uniserver/system-monitor/app.py --host 0.0.0.0 --port 9090
+User=YOUR_USER
+WorkingDirectory=/path/to/system-monitor
+ExecStart=/usr/bin/python3 /path/to/system-monitor/app.py --host 0.0.0.0 --port 9090
 Restart=always
 RestartSec=5
 Environment=PORT=9090

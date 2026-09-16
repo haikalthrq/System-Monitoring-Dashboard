@@ -1,8 +1,15 @@
 # System Monitoring Dashboard
 
-Dashboard realtime untuk monitoring **keseluruhan sistem** (bukan per-project). Pure `Python 3.12` stdlib, tanpa `pip`/`npm`.
+Dashboard realtime untuk monitoring **keseluruhan sistem** (bukan per-project). Pure Python stdlib, tanpa `pip`/`npm`.
 
 No login/auth. Data di-refresh tiap 1 detik via SSE.
+
+## Requirements
+
+- **OS:** Linux (data dibaca dari `/proc/*`, tidak jalan di macOS/Windows)
+- **Python:** `3.8+` (hanya stdlib, tanpa install dependency)
+- **Opsional** (ada fallback jika tidak ada): `docker`, `ps`, `du`, `git`, `systemctl`, `who`
+- **Frontend:** butuh internet untuk CDN (`Tailwind`, `Chart.js`, `Font Awesome`)
 
 ## Fitur
 
@@ -37,32 +44,39 @@ No login/auth. Data di-refresh tiap 1 detik via SSE.
 ## Cara pakai
 
 ```bash
+git clone https://github.com/haikalthrq/System-Monitoring-Dashboard.git
+cd System-Monitoring-Dashboard
+
 # manual (scan $HOME)
 python3 app.py --port 9090 --host 0.0.0.0
 
 # scan folder lain
-python3 app.py --port 9090 --projects-root /home/uniserver
+python3 app.py --port 9090 --projects-root "$HOME"
 # atau
-PROJECTS_ROOT=/home/uniserver python3 app.py --port 9090
+PROJECTS_ROOT="$HOME" python3 app.py --port 9090
 
 # atau via script
 ./start.sh
 PORT=8080 ./start.sh
+```
 
-# systemd
-sudo cp system-monitor.service /etc/systemd/system/
-# sesuaikan User= dan WorkingDirectory= di file service, lalu:
-sudo systemctl daemon-reload
-sudo systemctl enable --now system-monitor
-sudo systemctl status system-monitor
+systemd:
+
+```bash
+sudo ./install-service.sh            # port default 9090
+sudo ./install-service.sh --port=8080
 journalctl -u system-monitor -f
 ```
 
-Docker (optional):
+Docker:
 
 ```bash
 docker build -t system-monitor .
-docker run -d -p 9090:9090 -v /proc:/proc:ro -v /home:/home:ro -v /var/run/docker.sock:/var/run/docker.sock system-monitor
+docker run -d --name system-monitor -p 9090:9090 \
+  -v /proc:/proc:ro -v /home:/home:ro \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e PROJECTS_ROOT=/home \
+  system-monitor
 ```
 
 ## Akses dari laptop (VPS dev, port publik tertutup)
@@ -71,7 +85,7 @@ SSH tunnel (aman, tanpa buka port publik):
 
 ```bash
 # di laptop
-ssh -N -L 9090:localhost:9090 uniserver@<VPS-IP>
+ssh -N -L 9090:localhost:9090 user@<VPS-IP>
 ```
 
 Biarkan terminal SSH menyala, lalu buka `http://localhost:9090/` di browser laptop.
@@ -88,14 +102,16 @@ curl http://127.0.0.1:9090/api/health
 ## Struktur
 
 ```
-system-monitor/
+.
   app.py                  # backend + collectors
   static/
     index.html            # dashboard UI
     app.js                # SSE + Chart.js logic
     style.css             # scrollbar & badges
   start.sh                # helper script
-  system-monitor.service  # systemd unit (sesuaikan User/WorkingDirectory)
+  install-service.sh      # installer systemd (isi User/path otomatis)
+  system-monitor.service  # template unit (jangan copy manual)
+  Dockerfile              # image optional
   README.md
 ```
 
