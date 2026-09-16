@@ -1,61 +1,61 @@
 # System Monitoring Dashboard
 
-Dashboard realtime untuk monitoring **keseluruhan sistem** (bukan per-project). Pure Python stdlib, tanpa `pip`/`npm`.
+A realtime dashboard for monitoring the **entire system** (not per-project). Pure Python stdlib, no `pip`/`npm`.
 
-No login/auth. Data di-refresh tiap 1 detik via SSE.
+No login/auth. Data refreshes every 1 second via SSE.
 
 ## Requirements
 
-- **OS:** Linux (data dibaca dari `/proc/*`, tidak jalan di macOS/Windows)
-- **Python:** `3.8+` (hanya stdlib, tanpa install dependency)
-- **Opsional** (ada fallback jika tidak ada): `docker`, `ps`, `du`, `git`, `systemctl`, `who`
-- **Frontend:** butuh internet untuk CDN (`Tailwind`, `Chart.js`, `Font Awesome`)
+- **OS:** Linux (data is read from `/proc/*`, does not run on macOS/Windows)
+- **Python:** `3.8+` (stdlib only, no dependency installation)
+- **Optional** (graceful fallback if missing): `docker`, `ps`, `du`, `git`, `systemctl`, `who`
+- **Frontend:** internet access required for CDNs (`Tailwind`, `Chart.js`, `Font Awesome`)
 
-## Fitur
+## Features
 
-- **CPU:** total %, per-core %, loadavg 1/5/15, model CPU, MHz, history 60s
+- **CPU:** total %, per-core %, loadavg 1/5/15, CPU model, MHz, 60s history
 - **RAM:** total/used/available %, buffers/cached, swap
-- **Storage:** semua mount (`/`, `/boot`, `/mnt`, `/boot/efi`, dll) — usage %, inodes, free/total, I/O `read/write rate` per device via `/proc/diskstats`
-- **Network:** per interface (`eth0`/`lo`/docker `veth*`) — rx/tx bytes rate, packets, history chart
+- **Storage:** all mounts (`/`, `/boot`, `/mnt`, `/boot/efi`, etc.) — usage %, inodes, free/total, I/O `read/write rate` per device via `/proc/diskstats`
+- **Network:** per interface (`eth0`/`lo`/docker `veth*`) — rx/tx byte rate, packets, history chart
 - **System:** hostname, OS, kernel, uptime, users, process count
-- **Top Processes:** `ps -eo` sorted `CPU`/`MEM` (toggle), pid, ppid, comm, pcpu, pmem, cmd
-- **Docker:** `docker ps -a` + `docker stats` cached 5s — semua container
-- **Projects:** scan `$HOME/*` (configurable via `PROJECTS_ROOT`) — deteksi `docker/node/python/dotnet/minecraft/valheim/git`, size `du -sb`, git branch/status, `.service` status, running via docker/systemd match, search & filter realtime
-- **Responsive 100%:** `320px → 1600px` (mobile/tablet/desktop), dark theme
+- **Top Processes:** `ps -eo` sorted by `CPU`/`MEM` (toggle), pid, ppid, comm, pcpu, pmem, cmd
+- **Docker:** `docker ps -a` + `docker stats` cached 5s — all containers
+- **Projects:** scans `$HOME/*` (configurable via `PROJECTS_ROOT`) — detects `docker/node/python/dotnet/minecraft/valheim/git`, size via `du -sb`, git branch/status, `.service` status, running state via docker/systemd match, realtime search & filter
+- **100% responsive:** `320px → 1600px` (mobile/tablet/desktop), dark theme
 
-## Teknologi
+## Tech
 
 - Backend: `http.server ThreadingHTTPServer` + `SSE` (`/api/stream?interval=1`)
-- Data source: `/proc/stat`, `/proc/meminfo`, `/proc/mounts` + `statvfs`, `/proc/diskstats`, `/proc/net/dev`, `/proc/uptime`, `ps`, `docker`
+- Data sources: `/proc/stat`, `/proc/meminfo`, `/proc/mounts` + `statvfs`, `/proc/diskstats`, `/proc/net/dev`, `/proc/uptime`, `ps`, `docker`
 - Frontend: `Tailwind CDN` + `Chart.js 4` + `Font Awesome` — single page
-- Tanpa dependency eksternal — `python3 app.py` langsung jalan
+- Zero external dependencies — just run `python3 app.py`
 
-## Endpoint
+## Endpoints
 
 - `GET /` → dashboard HTML
 - `GET /static/*` → js/css
 - `GET /api/health` → `{"status":"ok"}`
-- `GET /api/stats` → JSON lengkap (cpu, memory, disks, disk_io, network, uptime, processes, docker, projects)
-- `GET /api/stream` → `text/event-stream` SSE interval 1s (realtime)
+- `GET /api/stats` → full JSON (cpu, memory, disks, disk_io, network, uptime, processes, docker, projects)
+- `GET /api/stream` → `text/event-stream` SSE at 1s interval (realtime)
 - `GET /api/projects?refresh=1` → full sync scan
-- `GET /api/docker` → docker cached
+- `GET /api/docker` → cached docker info
 - `GET /api/processes?sort=cpu|mem` → top 15
 
-## Cara pakai
+## Usage
 
 ```bash
 git clone https://github.com/haikalthrq/System-Monitoring-Dashboard.git
 cd System-Monitoring-Dashboard
 
-# manual (scan $HOME)
+# manual (scans $HOME)
 python3 app.py --port 9090 --host 0.0.0.0
 
-# scan folder lain
+# scan a different folder
 python3 app.py --port 9090 --projects-root "$HOME"
-# atau
+# or
 PROJECTS_ROOT="$HOME" python3 app.py --port 9090
 
-# atau via script
+# or via script
 ./start.sh
 PORT=8080 ./start.sh
 ```
@@ -63,7 +63,7 @@ PORT=8080 ./start.sh
 systemd:
 
 ```bash
-sudo ./install-service.sh            # port default 9090
+sudo ./install-service.sh            # default port 9090
 sudo ./install-service.sh --port=8080
 journalctl -u system-monitor -f
 ```
@@ -79,27 +79,27 @@ docker run -d --name system-monitor -p 9090:9090 \
   system-monitor
 ```
 
-## Akses dari laptop (VPS dev, port publik tertutup)
+## Access from a laptop (dev VPS, public port closed)
 
-SSH tunnel (aman, tanpa buka port publik):
+SSH tunnel (secure, no need to open a public port):
 
 ```bash
-# di laptop
+# on the laptop
 ssh -N -L 9090:localhost:9090 user@<VPS-IP>
 ```
 
-Biarkan terminal SSH menyala, lalu buka `http://localhost:9090/` di browser laptop.
+Keep the SSH terminal open, then open `http://localhost:9090/` in the laptop browser.
 
 ## Port
 
-Default `9090`, auto cari `9090-9110` jika terpakai. Tidak perlu auth.
+Default `9090`, auto-searches `9090-9110` if taken. No auth required.
 
 ```bash
 ss -tlnp | grep 9090
 curl http://127.0.0.1:9090/api/health
 ```
 
-## Struktur
+## Structure
 
 ```
 .
@@ -109,15 +109,15 @@ curl http://127.0.0.1:9090/api/health
     app.js                # SSE + Chart.js logic
     style.css             # scrollbar & badges
   start.sh                # helper script
-  install-service.sh      # installer systemd (isi User/path otomatis)
-  system-monitor.service  # template unit (jangan copy manual)
-  Dockerfile              # image optional
+  install-service.sh      # systemd installer (auto-fills User/paths)
+  system-monitor.service  # unit template (do not copy manually)
+  Dockerfile              # optional image
   README.md
 ```
 
-## Catatan
+## Notes
 
-- Projects scan `du -sb` cached 30s async (pertama placeholder `...` lalu real size di background)
-- Docker stats cached 5s
-- `disk list` filter `tmpfs` kecuali `/`, `/mnt`, dll
-- Untuk reverse proxy: `proxy_pass http://127.0.0.1:9090;` (nginx/caddy)
+- Project scan uses `du -sb` cached for 30s async (placeholder `...` first, then real sizes in the background)
+- Docker stats cached for 5s
+- `disk list` filters `tmpfs` except `/`, `/mnt`, etc.
+- For reverse proxy: `proxy_pass http://127.0.0.1:9090;` (nginx/caddy)

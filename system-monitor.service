@@ -1,7 +1,7 @@
 # System Monitor - Realtime Dashboard (TEMPLATE)
-# Jangan copy manual — jalankan ./install-service.sh agar
-# User= dan WorkingDirectory= terisi otomatis sesuai user & path saat ini.
-# Lihat README bagian "systemd".
+# Do not copy manually — run ./install-service.sh instead so that
+# User= and WorkingDirectory= are auto-filled for the current user & path.
+# See the README "systemd" section.
 [Unit]
 Description=System Monitor - Realtime Dashboard
 After=network.target docker.service

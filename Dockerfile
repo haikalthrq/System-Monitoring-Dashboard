@@ -1,6 +1,6 @@
 # System Monitoring Dashboard
 # Build: docker build -t system-monitor .
-# Run (butuh akses /proc + docker socket dari host):
+# Run (needs /proc access + docker socket from the host):
 #   docker run -d --name system-monitor -p 9090:9090 \
 #     -v /proc:/proc:ro -v /home:/home:ro \
 #     -v /var/run/docker.sock:/var/run/docker.sock \
@@ -8,7 +8,7 @@
 #     system-monitor
 FROM python:3.12-slim
 
-# procps (ps) untuk top processes akurat + who untuk user count
+# procps (ps) for accurate top processes + who for user count
 RUN apt-get update && apt-get install -y --no-install-recommends procps \
     && rm -rf /var/lib/apt/lists/*
 

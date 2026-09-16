@@ -1,6 +1,6 @@
 #!/bin/bash
-# Install systemd service untuk System Monitor.
-# Mengisi User= dan path otomatis dari user & folder saat ini.
+# Install the systemd service for System Monitor.
+# Auto-fills User= and paths from the current user & directory.
 # Usage: sudo ./install-service.sh [--port 9090]
 set -e
 
@@ -44,5 +44,5 @@ systemctl daemon-reload
 systemctl enable --now system-monitor
 systemctl status system-monitor --no-pager
 echo ""
-echo "Log: journalctl -u system-monitor -f"
+echo "Logs: journalctl -u system-monitor -f"
 echo "Dashboard: http://localhost:$PORT/"

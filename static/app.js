@@ -82,7 +82,7 @@ function updateHeader(data){
   document.getElementById('proc-count').textContent = data.processes.total || '0';
   document.getElementById('user-count').textContent = data.uptime.users || '0';
   document.getElementById('last-update').textContent = data.timestamp_human || '';
-  document.getElementById('current-time').textContent = new Date().toLocaleTimeString('id-ID');
+  document.getElementById('current-time').textContent = new Date().toLocaleTimeString('en-US');
 }
 
 function updateCpu(data){
@@ -255,7 +255,7 @@ function renderProjects(){
     return p.types.includes(filter);
   });
   if(!filtered.length){
-    body.innerHTML=`<tr><td colspan="5" class="py-8 text-center text-gray-600">Tidak ada project sesuai filter</td></tr>`;
+    body.innerHTML=`<tr><td colspan="5" class="py-8 text-center text-gray-600">No projects match the filter</td></tr>`;
     return;
   }
   body.innerHTML='';
@@ -287,7 +287,7 @@ function renderProjects(){
 function updateDocker(data){
   const d=data.docker;
   if(!d || !d.available){
-    document.getElementById('docker-body').innerHTML=`<tr><td colspan="5" class="py-6 text-center text-gray-600">Docker tidak tersedia</td></tr>`;
+    document.getElementById('docker-body').innerHTML=`<tr><td colspan="5" class="py-6 text-center text-gray-600">Docker not available</td></tr>`;
     return;
   }
   document.getElementById('docker-count').textContent=d.count;
@@ -319,7 +319,7 @@ function updateCharts(data){
   // cpu/ram
   cpuHistory.shift(); cpuHistory.push(data.cpu.usage);
   ramHistory.shift(); ramHistory.push(data.memory.percent);
-  const nowLabel = new Date().toLocaleTimeString('id-ID');
+  const nowLabel = new Date().toLocaleTimeString('en-US');
   labels.shift(); labels.push(nowLabel);
   cpuChart.update('none');
 

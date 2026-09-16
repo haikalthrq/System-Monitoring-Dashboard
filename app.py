@@ -19,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 STATIC_DIR = ROOT / "static"
 # Project scan root: configurable via env PROJECTS_ROOT, default to current user's home.
-# Contoh: PROJECTS_ROOT=$HOME python3 app.py
+# Example: PROJECTS_ROOT=$HOME python3 app.py
 HOME_DIR = Path(os.environ.get("PROJECTS_ROOT") or Path.home())
 
 # Global state for delta calculations

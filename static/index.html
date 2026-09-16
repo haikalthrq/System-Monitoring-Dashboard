@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
@@ -165,9 +165,9 @@ tailwind.config = {
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
           <h3 class="font-semibold text-sm flex items-center gap-2 shrink-0"><i class="fas fa-folder-tree text-blue-400"></i> Projects <span id="project-count" class="bg-[#1f2937] text-gray-400 px-2 py-0.5 rounded-full text-xs font-mono">0</span></h3>
           <div class="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
-            <input id="project-search" placeholder="Cari project..." class="bg-[#0a0e14] border border-[#1f2937] rounded-lg px-3 py-2 sm:py-1.5 text-xs w-full xs:flex-1 sm:w-48 focus:outline-none focus:border-blue-500 min-w-0">
+            <input id="project-search" placeholder="Search projects..." class="bg-[#0a0e14] border border-[#1f2937] rounded-lg px-3 py-2 sm:py-1.5 text-xs w-full xs:flex-1 sm:w-48 focus:outline-none focus:border-blue-500 min-w-0">
             <select id="project-filter" class="bg-[#0a0e14] border border-[#1f2937] rounded-lg px-2 py-2 sm:py-1.5 text-xs w-full xs:w-auto sm:w-auto focus:outline-none focus:border-blue-500 shrink-0">
-              <option value="all">Semua</option>
+              <option value="all">All</option>
               <option value="running">Running</option>
               <option value="docker">Docker</option>
               <option value="python">Python</option>
@@ -189,7 +189,7 @@ tailwind.config = {
               </tr>
             </thead>
             <tbody id="projects-body" class="divide-y divide-[#1f2937]/50">
-              <tr><td colspan="5" class="py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat projects...</td></tr>
+              <tr><td colspan="5" class="py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading projects...</td></tr>
             </tbody>
           </table>
         </div>
@@ -257,13 +257,13 @@ tailwind.config = {
             <tbody id="docker-body" class="divide-y divide-[#1f2937]/30"></tbody>
           </table>
         </div>
-        <div id="docker-empty" class="hidden py-8 text-center text-gray-600 text-sm">Tidak ada container</div>
+        <div id="docker-empty" class="hidden py-8 text-center text-gray-600 text-sm">No containers</div>
       </div>
     </div>
 
     <!-- Footer -->
     <div class="text-center text-[11px] sm:text-xs text-gray-600 py-4 border-t border-[#1f2937]/50 px-2">
-      <span class="hidden sm:inline">System Monitor • Realtime via SSE • </span><span id="last-update" class="font-mono">--</span><span class="hidden sm:inline"> • Data dari /proc & Docker</span>
+      <span class="hidden sm:inline">System Monitor • Realtime via SSE • </span><span id="last-update" class="font-mono">--</span><span class="hidden sm:inline"> • Data from /proc & Docker</span>
     </div>
   </main>
 
