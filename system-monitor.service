@@ -1,0 +1,21 @@
+[Unit]
+Description=System Monitor - Realtime Dashboard
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=uniserver
+WorkingDirectory=/home/uniserver/system-monitor
+ExecStart=/usr/bin/python3 /home/uniserver/system-monitor/app.py --host 0.0.0.0 --port 9090
+Restart=always
+RestartSec=5
+Environment=PORT=9090
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=system-monitor
+
+[Install]
+WantedBy=multi-user.target

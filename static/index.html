@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>System Monitor - Realtime Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="/static/style.css">
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { colors: { darkBg: '#0a0e14', cardBg: '#151b24', borderCol: '#1f2937' } } }
+}
+</script>
+</head>
+<body class="bg-[#0a0e14] text-gray-100 min-h-screen font-sans antialiased overflow-x-hidden">
+  <!-- Header -->
+  <header class="sticky top-0 z-40 bg-[#0f141f]/90 backdrop-blur-md border-b border-[#1f2937]">
+    <div class="max-w-[1600px] mx-auto w-full px-3 sm:px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+        <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shrink-0">
+          <i class="fas fa-server text-white text-xs sm:text-sm"></i>
+        </div>
+        <div class="min-w-0">
+          <h1 class="font-bold text-base sm:text-lg leading-none truncate">System Monitor</h1>
+          <p class="text-[11px] sm:text-xs text-gray-400 truncate" id="header-sub">Realtime • <span id="hostname">loading...</span> • <span id="os-info" class="hidden xs:inline">Ubuntu</span></p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 sm:gap-4 text-sm shrink-0">
+        <div class="hidden sm:flex items-center gap-2 text-gray-400 text-xs">
+          <i class="far fa-clock"></i>
+          <span id="current-time" class="font-mono hidden lg:inline">--:--:--</span>
+        </div>
+        <div class="flex items-center gap-1.5 sm:gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-emerald-400 font-medium text-[11px] sm:text-xs" id="conn-status">LIVE</span>
+        </div>
+        <div class="text-[11px] sm:text-xs text-gray-500 hidden md:block whitespace-nowrap">Uptime <span id="uptime" class="text-gray-300 font-mono">--</span></div>
+        <button onclick="toggleTheme()" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#1a2332] border border-[#1f2937] flex items-center justify-center hover:bg-[#232f45] shrink-0"><i class="fas fa-moon text-[11px]"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1600px] mx-auto w-full px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+    <!-- Top stats row -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <!-- CPU -->
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 relative overflow-hidden min-w-0">
+        <div class="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-cyan-500/10 to-transparent rounded-bl-full pointer-events-none"></div>
+        <div class="flex justify-between items-start mb-3 gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 font-semibold">CPU Usage</p>
+            <p class="text-2xl sm:text-3xl font-bold mt-1 font-mono truncate" id="cpu-usage">--%</p>
+            <p class="text-[11px] sm:text-xs text-gray-500 truncate" id="cpu-model">Xeon Platinum 8370C • 4 cores</p>
+          </div>
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+            <i class="fas fa-microchip text-cyan-400 text-xs sm:text-sm"></i>
+          </div>
+        </div>
+        <div class="w-full h-2 bg-[#0a0e14] rounded-full overflow-hidden mb-2">
+          <div id="cpu-bar" class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between text-[11px] sm:text-xs gap-2">
+          <span class="text-gray-500 truncate">Load <span id="loadavg" class="text-gray-300 font-mono">-- -- --</span></span>
+          <span class="text-gray-500 shrink-0" id="cpu-mhz">-- MHz</span>
+        </div>
+        <div class="mt-3 grid grid-cols-4 sm:flex gap-1 sm:gap-1" id="cpu-cores"></div>
+      </div>
+
+      <!-- RAM -->
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 relative overflow-hidden min-w-0">
+        <div class="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-violet-500/10 to-transparent rounded-bl-full pointer-events-none"></div>
+        <div class="flex justify-between items-start mb-3 gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 font-semibold">Memory</p>
+            <p class="text-2xl sm:text-3xl font-bold mt-1 font-mono" id="ram-usage">--%</p>
+            <p class="text-[11px] sm:text-xs text-gray-500 truncate" id="ram-detail">-- / -- GB</p>
+          </div>
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+            <i class="fas fa-memory text-violet-400 text-xs sm:text-sm"></i>
+          </div>
+        </div>
+        <div class="w-full h-2 bg-[#0a0e14] rounded-full overflow-hidden mb-2">
+          <div id="ram-bar" class="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between text-[11px] sm:text-xs text-gray-500 gap-2">
+          <span class="truncate">Available <span id="ram-available" class="text-gray-300 font-mono">--</span></span>
+          <span class="shrink-0">Swap <span id="swap-usage">0%</span></span>
+        </div>
+        <div class="mt-2 text-[11px] sm:text-xs text-gray-600 font-mono truncate" id="ram-extra">Buffers -- • Cached --</div>
+      </div>
+
+      <!-- Storage -->
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 relative overflow-hidden min-w-0">
+        <div class="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-amber-500/10 to-transparent rounded-bl-full pointer-events-none"></div>
+        <div class="flex justify-between items-start mb-3 gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 font-semibold">Storage</p>
+            <p class="text-2xl sm:text-3xl font-bold mt-1 font-mono" id="disk-usage">--%</p>
+            <p class="text-[11px] sm:text-xs text-gray-500 truncate" id="disk-detail">/  -- used</p>
+          </div>
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+            <i class="fas fa-hard-drive text-amber-400 text-xs sm:text-sm"></i>
+          </div>
+        </div>
+        <div class="w-full h-2 bg-[#0a0e14] rounded-full overflow-hidden mb-2">
+          <div id="disk-bar" class="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500" style="width:0%"></div>
+        </div>
+        <div class="text-[11px] sm:text-xs text-gray-500 flex justify-between gap-2">
+          <span id="disk-free" class="truncate">Free -- GB</span>
+          <span id="disk-fstype" class="shrink-0">ext4</span>
+        </div>
+        <div class="mt-2 text-[11px] sm:text-xs font-mono text-gray-600 truncate" id="disk-io">R 0 MB/s • W 0 MB/s</div>
+      </div>
+
+      <!-- Network + System -->
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 relative overflow-hidden min-w-0">
+        <div class="absolute top-0 right-0 w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-bl-full pointer-events-none"></div>
+        <div class="flex justify-between items-start mb-2 gap-2">
+          <div class="min-w-0 flex-1">
+            <p class="text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 font-semibold">System</p>
+            <p class="text-base sm:text-lg font-bold mt-1 truncate" id="system-host">--</p>
+            <p class="text-[11px] sm:text-xs text-gray-500 font-mono truncate" id="kernel-info">kernel --</p>
+          </div>
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+            <i class="fas fa-network-wired text-emerald-400 text-xs sm:text-sm"></i>
+          </div>
+        </div>
+        <div class="space-y-1.5 sm:space-y-2 text-[11px] sm:text-xs mt-3">
+          <div class="flex justify-between gap-2"><span class="text-gray-500">Processes</span><span id="proc-count" class="font-mono text-gray-300 shrink-0">--</span></div>
+          <div class="flex justify-between gap-2"><span class="text-gray-500">Users</span><span id="user-count" class="font-mono text-gray-300 shrink-0">--</span></div>
+          <div class="flex justify-between gap-2"><span class="text-gray-500">Network RX</span><span id="net-rx" class="font-mono text-emerald-400 shrink-0">--</span></div>
+          <div class="flex justify-between gap-2"><span class="text-gray-500">Network TX</span><span id="net-tx" class="font-mono text-blue-400 shrink-0">--</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 lg:col-span-2 min-w-0 overflow-hidden">
+        <div class="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2 mb-3">
+          <h3 class="font-semibold text-xs sm:text-sm flex items-center gap-2"><i class="fas fa-chart-line text-cyan-400"></i> CPU & Memory History (60s)</h3>
+          <div class="flex gap-3 text-[11px] sm:text-xs">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-cyan-500"></span> CPU</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm bg-violet-500"></span> RAM</span>
+          </div>
+        </div>
+        <div class="h-[180px] sm:h-[220px] relative w-full"><canvas id="cpuChart"></canvas></div>
+      </div>
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 min-w-0 overflow-hidden">
+        <div class="flex justify-between items-center mb-3 gap-2">
+          <h3 class="font-semibold text-xs sm:text-sm flex items-center gap-2"><i class="fas fa-wind text-emerald-400"></i> Network I/O</h3>
+          <span class="text-[11px] sm:text-xs text-gray-500 shrink-0" id="net-iface">eth0</span>
+        </div>
+        <div class="h-[180px] sm:h-[220px] relative w-full"><canvas id="netChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Projects + Disks -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+      <!-- Projects -->
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 lg:col-span-2 min-w-0 overflow-hidden flex flex-col">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
+          <h3 class="font-semibold text-sm flex items-center gap-2 shrink-0"><i class="fas fa-folder-tree text-blue-400"></i> Projects <span id="project-count" class="bg-[#1f2937] text-gray-400 px-2 py-0.5 rounded-full text-xs font-mono">0</span></h3>
+          <div class="flex flex-col xs:flex-row gap-2 w-full sm:w-auto">
+            <input id="project-search" placeholder="Cari project..." class="bg-[#0a0e14] border border-[#1f2937] rounded-lg px-3 py-2 sm:py-1.5 text-xs w-full xs:flex-1 sm:w-48 focus:outline-none focus:border-blue-500 min-w-0">
+            <select id="project-filter" class="bg-[#0a0e14] border border-[#1f2937] rounded-lg px-2 py-2 sm:py-1.5 text-xs w-full xs:w-auto sm:w-auto focus:outline-none focus:border-blue-500 shrink-0">
+              <option value="all">Semua</option>
+              <option value="running">Running</option>
+              <option value="docker">Docker</option>
+              <option value="python">Python</option>
+              <option value="dotnet">.NET</option>
+              <option value="minecraft">Minecraft</option>
+              <option value="valheim">Valheim</option>
+            </select>
+          </div>
+        </div>
+        <div class="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-thin">
+          <table class="w-full text-sm min-w-[540px] sm:min-w-0">
+            <thead class="text-xs text-gray-500 uppercase">
+              <tr class="border-b border-[#1f2937]">
+                <th class="text-left py-2 font-medium whitespace-nowrap">Project</th>
+                <th class="text-left py-2 font-medium hidden sm:table-cell whitespace-nowrap">Type</th>
+                <th class="text-left py-2 font-medium hidden md:table-cell whitespace-nowrap">Size</th>
+                <th class="text-left py-2 font-medium hidden lg:table-cell whitespace-nowrap">Git</th>
+                <th class="text-left py-2 font-medium whitespace-nowrap">Status</th>
+              </tr>
+            </thead>
+            <tbody id="projects-body" class="divide-y divide-[#1f2937]/50">
+              <tr><td colspan="5" class="py-8 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Memuat projects...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Disks detail -->
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 min-w-0 overflow-hidden">
+        <h3 class="font-semibold text-sm mb-3 flex items-center gap-2"><i class="fas fa-database text-amber-400"></i> Storage Detail</h3>
+        <div id="disks-list" class="space-y-3"></div>
+        <div class="mt-4 pt-4 border-t border-[#1f2937]">
+          <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Disk I/O Rate</h4>
+          <div id="disk-io-list" class="space-y-2 text-xs font-mono"></div>
+        </div>
+        <div class="mt-4 pt-4 border-t border-[#1f2937]">
+          <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Network Interfaces</h4>
+          <div id="net-list" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processes + Docker -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+      <!-- Processes -->
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 min-w-0 overflow-hidden flex flex-col">
+        <div class="flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2 sm:gap-3 mb-3">
+          <h3 class="font-semibold text-xs sm:text-sm flex items-center gap-2"><i class="fas fa-list-check text-orange-400"></i> Top Processes</h3>
+          <div class="flex gap-1 shrink-0">
+            <button onclick="setProcSort('cpu')" id="btn-cpu" class="px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-medium bg-blue-600 text-white">CPU</button>
+            <button onclick="setProcSort('mem')" id="btn-mem" class="px-2.5 py-1.5 sm:py-1 rounded-lg text-xs font-medium bg-[#1f2937] text-gray-400 hover:bg-[#232f45]">MEM</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-thin">
+          <table class="w-full text-xs min-w-[420px] sm:min-w-0">
+            <thead class="text-gray-500">
+              <tr class="border-b border-[#1f2937]">
+                <th class="text-left py-2 whitespace-nowrap">PID</th>
+                <th class="text-left py-2 whitespace-nowrap">Name</th>
+                <th class="text-right py-2 whitespace-nowrap">CPU%</th>
+                <th class="text-right py-2 whitespace-nowrap">MEM%</th>
+                <th class="text-left py-2 hidden sm:table-cell whitespace-nowrap">CMD</th>
+              </tr>
+            </thead>
+            <tbody id="proc-body" class="divide-y divide-[#1f2937]/30 font-mono"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Docker -->
+      <div class="bg-[#151b24] border border-[#1f2937] rounded-xl p-3 sm:p-4 min-w-0 overflow-hidden flex flex-col">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+          <h3 class="font-semibold text-xs sm:text-sm flex items-center gap-2"><i class="fab fa-docker text-sky-400"></i> Docker <span id="docker-count" class="bg-[#1f2937] text-gray-400 px-2 py-0.5 rounded-full text-xs">0</span></h3>
+          <span class="text-xs text-gray-500 whitespace-nowrap" id="docker-running">0 running</span>
+        </div>
+        <div class="overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0 scrollbar-thin">
+          <table class="w-full text-xs min-w-[460px] sm:min-w-0">
+            <thead class="text-gray-500">
+              <tr class="border-b border-[#1f2937]">
+                <th class="text-left py-2 whitespace-nowrap">Name</th>
+                <th class="text-left py-2 hidden sm:table-cell whitespace-nowrap">Image</th>
+                <th class="text-left py-2 whitespace-nowrap">Status</th>
+                <th class="text-right py-2 hidden md:table-cell whitespace-nowrap">CPU</th>
+                <th class="text-right py-2 hidden md:table-cell whitespace-nowrap">Mem</th>
+              </tr>
+            </thead>
+            <tbody id="docker-body" class="divide-y divide-[#1f2937]/30"></tbody>
+          </table>
+        </div>
+        <div id="docker-empty" class="hidden py-8 text-center text-gray-600 text-sm">Tidak ada container</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center text-[11px] sm:text-xs text-gray-600 py-4 border-t border-[#1f2937]/50 px-2">
+      <span class="hidden sm:inline">System Monitor • Realtime via SSE • </span><span id="last-update" class="font-mono">--</span><span class="hidden sm:inline"> • Data dari /proc & Docker</span>
+    </div>
+  </main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
