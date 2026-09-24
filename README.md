@@ -6,9 +6,9 @@ No login/auth. Data refreshes every 1 second via SSE.
 
 ## Requirements
 
-- **OS:** Linux (data is read from `/proc/*`, does not run on macOS/Windows)
-- **Python:** `3.8+` (stdlib only, no dependency installation)
-- **Optional** (graceful fallback if missing): `docker`, `ps`, `du`, `git`, `systemctl`, `who`
+- **OS:** Linux & Windows (auto-adapts natively without extra configuration)
+- **Python:** `3.8+` (pure standard library only, zero `pip` install required)
+- **Optional** (graceful fallback if missing): `docker`, `git`, `systemctl`, `who`
 - **Frontend:** internet access required for CDNs (`Tailwind`, `Chart.js`, `Font Awesome`)
 
 ## Features
@@ -47,17 +47,19 @@ No login/auth. Data refreshes every 1 second via SSE.
 git clone https://github.com/haikalthrq/System-Monitoring-Dashboard.git
 cd System-Monitoring-Dashboard
 
-# manual (scans $HOME)
+# Linux
 python3 app.py --port 9090 --host 0.0.0.0
-
-# scan a different folder
-python3 app.py --port 9090 --projects-root "$HOME"
-# or
-PROJECTS_ROOT="$HOME" python3 app.py --port 9090
-
 # or via script
 ./start.sh
-PORT=8080 ./start.sh
+
+# Windows (Command Prompt / PowerShell)
+python app.py --port 9090 --host 0.0.0.0
+# or via scripts
+.\start.bat
+.\start.ps1
+
+# scan a different folder
+python app.py --port 9090 --projects-root "D:\My Files\Personal Project"
 ```
 
 systemd:

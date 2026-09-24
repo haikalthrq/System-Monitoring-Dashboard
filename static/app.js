@@ -77,7 +77,8 @@ function updateHeader(data){
   document.getElementById('hostname').textContent = data.uptime.hostname || '-';
   document.getElementById('os-info').textContent = data.uptime.os || '';
   document.getElementById('uptime').textContent = data.uptime.uptime_human || '-';
-  document.getElementById('kernel-info').textContent = `kernel ${data.uptime.kernel || ''}`;
+  const isWin = (data.uptime.os || '').toLowerCase().includes('windows');
+  document.getElementById('kernel-info').textContent = `${isWin ? 'build' : 'kernel'} ${data.uptime.kernel || ''}`;
   document.getElementById('system-host').textContent = data.uptime.hostname || '-';
   document.getElementById('proc-count').textContent = data.processes.total || '0';
   document.getElementById('user-count').textContent = data.uptime.users || '0';
@@ -120,7 +121,13 @@ function updateMemory(data){
   if(m.percent>85) bar.className='h-full bg-gradient-to-r from-red-500 to-pink-500 rounded-full transition-all duration-500';
   else if(m.percent>70) bar.className='h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500';
   else bar.className='h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full transition-all duration-500';
-  document.getElementById('ram-extra').textContent = `Buffers ${humanBytes(m.buffers)} • Cached ${humanBytes(m.cached)}`;
+  if(m.buffers || m.cached) {
+    document.getElementById('ram-extra').textContent = `Buffers ${humanBytes(m.buffers)} • Cached ${humanBytes(m.cached)}`;
+  } else if(m.swap_total) {
+    document.getElementById('ram-extra').textContent = `Pagefile ${humanBytes(m.swap_used)} / ${humanBytes(m.swap_total)}`;
+  } else {
+    document.getElementById('ram-extra').textContent = `Available ${humanBytes(m.available)}`;
+  }
 }
 
 function updateDisks(data){
@@ -152,6 +159,7 @@ function updateDisks(data){
     const col = pct>85 ? 'from-red-500 to-orange-500' : pct>70 ? 'from-amber-500 to-orange-500' : 'from-emerald-500 to-teal-500';
     const el = document.createElement('div');
     el.className='bg-[#0a0e14] border border-[#1f2937] rounded-lg p-3';
+    const inodeText = (d.inodes_total > 0 && d.inodes_percent !== undefined) ? `inodes ${d.inodes_percent.toFixed(1)}% • ` : '';
     el.innerHTML = `
       <div class="flex justify-between items-start mb-2">
         <div>
@@ -163,7 +171,7 @@ function updateDisks(data){
       <div class="w-full h-1.5 bg-[#151b24] rounded-full overflow-hidden">
         <div class="h-full bg-gradient-to-r ${col} rounded-full" style="width:${pct}%"></div>
       </div>
-      <p class="text-[10px] text-gray-600 mt-1 font-mono">inodes ${d.inodes_percent.toFixed(1)}% • free ${humanBytes(d.free)}</p>
+      <p class="text-[10px] text-gray-600 mt-1 font-mono">${inodeText}free ${humanBytes(d.free)}</p>
     `;
     list.appendChild(el);
   });
